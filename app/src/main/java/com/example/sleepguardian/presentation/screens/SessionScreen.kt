@@ -15,6 +15,13 @@ import com.example.sleepguardian.presentation.components.PrimaryButton
 fun SessionScreen(viewModel: SessionViewModel, navController: NavController) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Navigate back only after session is finished and data is saved
+    LaunchedEffect(uiState.isSessionFinished) {
+        if (uiState.isSessionFinished) {
+            navController.popBackStack()
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -63,7 +70,6 @@ fun SessionScreen(viewModel: SessionViewModel, navController: NavController) {
                 text = "Stop Session",
                 onClick = {
                     viewModel.stopSession()
-                    navController.popBackStack()
                 },
                 containerColor = MaterialTheme.colorScheme.error,
                 contentColor = MaterialTheme.colorScheme.onError
