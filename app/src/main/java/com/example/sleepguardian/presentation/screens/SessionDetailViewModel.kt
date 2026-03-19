@@ -1,6 +1,7 @@
 package com.example.sleepguardian.presentation.screens
 
 import androidx.lifecycle.viewModelScope
+import com.example.sleepguardian.data.local.SleepStageEntity
 import com.example.sleepguardian.data.local.SoundEventEntity
 import com.example.sleepguardian.domain.repository.SleepHistoryRepository
 import com.example.sleepguardian.presentation.BaseViewModel
@@ -24,12 +25,14 @@ class SessionDetailViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             val events = repository.getSoundEventsForSession(sessionId)
+            val stages = repository.getSleepStagesForSession(sessionId)
 
             val noiseCount = events.count { it.label == "Noise" }
             val loudNoiseCount = events.count { it.label == "Loud Noise" }
 
             _uiState.value = DetailUiState(
                 events = events.map { it.toDisplayModel() },
+                stages = stages.map { it.toDisplayModel() },
                 noiseCount = noiseCount,
                 loudNoiseCount = loudNoiseCount,
                 isLoading = false
@@ -39,6 +42,7 @@ class SessionDetailViewModel(
 
     data class DetailUiState(
         val events: List<SoundEventDisplayModel> = emptyList(),
+        val stages: List<SleepStageDisplayModel> = emptyList(),
         val noiseCount: Int = 0,
         val loudNoiseCount: Int = 0,
         val isLoading: Boolean = false
@@ -50,12 +54,25 @@ class SessionDetailViewModel(
         val amplitude: Int
     )
 
+    data class SleepStageDisplayModel(
+        val time: String,
+        val stage: String
+    )
+
     private fun SoundEventEntity.toDisplayModel(): SoundEventDisplayModel {
         val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         return SoundEventDisplayModel(
             time = dateFormat.format(Date(timestamp)),
             label = label,
             amplitude = amplitude
+        )
+    }
+
+    private fun SleepStageEntity.toDisplayModel(): SleepStageDisplayModel {
+        val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        return SleepStageDisplayModel(
+            time = dateFormat.format(Date(timestamp)),
+            stage = stage
         )
     }
 }

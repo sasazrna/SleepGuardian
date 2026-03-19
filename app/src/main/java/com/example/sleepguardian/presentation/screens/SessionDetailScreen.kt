@@ -46,6 +46,25 @@ fun SessionDetailScreen(viewModel: SessionDetailViewModel) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                if (uiState.stages.isNotEmpty()) {
+                    Text(
+                        text = "Sleep Stages",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    )
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 200.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(uiState.stages) { stage ->
+                            StageItem(stage = stage)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Text(
                     text = "Event Timeline",
                     style = MaterialTheme.typography.titleMedium,
@@ -54,6 +73,7 @@ fun SessionDetailScreen(viewModel: SessionDetailViewModel) {
                 )
 
                 LazyColumn(
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
@@ -63,6 +83,19 @@ fun SessionDetailScreen(viewModel: SessionDetailViewModel) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun StageItem(stage: SessionDetailViewModel.SleepStageDisplayModel) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = stage.stage, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        Text(text = stage.time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
