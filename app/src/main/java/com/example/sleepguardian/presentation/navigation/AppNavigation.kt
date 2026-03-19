@@ -73,7 +73,15 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
             OnboardingScreen(onboardingViewModel, navController)
         }
         composable(Screen.Home.route) {
-            HomeScreen(navController)
+            val smartAlarmViewModel: SmartAlarmViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        @Suppress("UNCHECKED_CAST")
+                        return SmartAlarmViewModel(dependencies.alarmRepo, dependencies.alarmScheduler) as T
+                    }
+                }
+            )
+            HomeScreen(navController, smartAlarmViewModel)
         }
         composable(Screen.Session.route) {
             val sessionViewModel: SessionViewModel = viewModel(
@@ -140,6 +148,10 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
                 }
             )
             SoundsScreen(soundsViewModel)
+        }
+        composable(Screen.MorningGame.route) {
+            val morningGameViewModel: MorningGameViewModel = viewModel()
+            MorningGameScreen(morningGameViewModel)
         }
         composable(Screen.Settings.route) {
             SettingsScreen()

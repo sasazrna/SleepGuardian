@@ -138,10 +138,14 @@ fun SessionDetailScreen(viewModel: SessionDetailViewModel) {
 
                 // Noise Distribution
                 item {
-                    NoiseDistributionChart(
-                        noiseCount = uiState.noiseCount,
-                        loudNoiseCount = uiState.loudNoiseCount
-                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        NoiseDistributionChart(
+                            noiseCount = uiState.noiseCount,
+                            loudNoiseCount = uiState.loudNoiseCount
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        StatusIndicator(label = "Snores", value = uiState.snoreCount.toString(), indicatorColor = Color.Yellow)
+                    }
                 }
 
                 // Event Timeline

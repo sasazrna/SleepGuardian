@@ -30,6 +30,7 @@ class SessionDetailViewModel(
 
             val noiseCount = events.count { it.label == "Noise" }
             val loudNoiseCount = events.count { it.label == "Loud Noise" }
+            val snoreCount = events.count { it.label == "Snoring" }
             val insights = generateInsights(events, stages)
 
             _uiState.value = DetailUiState(
@@ -38,6 +39,7 @@ class SessionDetailViewModel(
                 stages = stages.map { it.toDisplayModel() },
                 noiseCount = noiseCount,
                 loudNoiseCount = loudNoiseCount,
+                snoreCount = snoreCount,
                 insights = insights,
                 isLoading = false
             )
@@ -46,12 +48,20 @@ class SessionDetailViewModel(
 
     private fun generateInsights(events: List<SoundEventEntity>, stages: List<SleepStageEntity>): List<String> {
         val list = mutableListOf<String>()
+        val snoreCount = events.count { it.label == "Snoring" }
+
         if (events.count { it.label == "Loud Noise" } > 5) {
             list.add("You had frequent loud disturbances.")
         }
         if (stages.count { it.stage == "Deep Sleep" } > 10) {
             list.add("You had stable deep sleep periods.")
         }
+        if (snoreCount > 20) {
+            list.add("High snore count detected ($snoreCount). Try sleeping on your side to reduce snoring.")
+        } else if (snoreCount > 0) {
+            list.add("Some snoring was detected ($snoreCount).")
+        }
+
         if (list.isEmpty()) {
             list.add("Your sleep was relatively calm.")
         }
@@ -64,6 +74,7 @@ class SessionDetailViewModel(
         val stages: List<SleepStageDisplayModel> = emptyList(),
         val noiseCount: Int = 0,
         val loudNoiseCount: Int = 0,
+        val snoreCount: Int = 0,
         val insights: List<String> = emptyList(),
         val isLoading: Boolean = false
     )

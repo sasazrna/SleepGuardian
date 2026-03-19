@@ -16,8 +16,11 @@ class HistoryViewModel(private val repository: SleepHistoryRepository) :
 
     val historyState: StateFlow<HistoryUiState> = repository.getAllSessions()
         .map { sessions ->
+            val weeklyAverages = calculateWeeklyAverages(sessions)
             HistoryUiState(
                 sessions = sessions.map { it.toDisplayModel() },
+                weeklyAverageScore = weeklyAverages.first,
+                weeklyAverageDuration = weeklyAverages.second,
                 isLoading = false
             )
         }
@@ -29,6 +32,8 @@ class HistoryViewModel(private val repository: SleepHistoryRepository) :
 
     data class HistoryUiState(
         val sessions: List<SessionDisplayModel> = emptyList(),
+        val weeklyAverageScore: String = "--",
+        val weeklyAverageDuration: String = "--",
         val isLoading: Boolean = false
     )
 
@@ -38,6 +43,25 @@ class HistoryViewModel(private val repository: SleepHistoryRepository) :
         val duration: String,
         val score: String
     )
+
+    private fun calculateWeeklyAverages(sessions: List<SleepSessionEntity>): Pair<String, String> {
+        if (sessions.isEmpty()) return Pair("--", "--")
+
+        val last7Days = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)
+        val recentSessions = sessions.filter { it.startTime > last7Days }
+
+        if (recentSessions.isEmpty()) return Pair("--", "--")
+
+        val avgScore = recentSessions.mapNotNull { it.sleepScore }.average().toInt()
+        val avgDuration = recentSessions.map {
+            if (it.endTime != null) it.endTime - it.startTime else 0L
+        }.average().toLong()
+
+        val hours = avgDuration / 3600000
+        val minutes = (avgDuration % 3600000) / 60000
+
+        return Pair(avgScore.toString(), "${hours}h ${minutes}m")
+    }
 
     private fun SleepSessionEntity.toDisplayModel(): SessionDisplayModel {
         val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())

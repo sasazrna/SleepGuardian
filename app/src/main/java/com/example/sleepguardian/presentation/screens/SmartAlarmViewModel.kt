@@ -33,6 +33,10 @@ class SmartAlarmViewModel(
         _uiState.value = _uiState.value.copy(wakeWindowMinutes = minutes)
     }
 
+    fun updateSleepGoal(hours: Int) {
+        _uiState.value = _uiState.value.copy(sleepGoalHours = hours)
+    }
+
     fun toggleEnabled(enabled: Boolean) {
         _uiState.value = _uiState.value.copy(isEnabled = enabled)
     }

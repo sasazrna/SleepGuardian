@@ -5,6 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -16,7 +19,9 @@ import com.example.sleepguardian.presentation.components.StatusIndicator
 import com.example.sleepguardian.presentation.navigation.Screen
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, alarmViewModel: SmartAlarmViewModel) {
+    val settings by alarmViewModel.uiState.collectAsState()
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -69,6 +74,31 @@ fun HomeScreen(navController: NavController) {
                 }
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InfoCard(
+                title = "Daily Goal",
+                content = {
+                    Column {
+                        Text(text = "Goal: ${settings.sleepGoalHours} hours", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        // Simulated progress for MVP
+                        LinearProgressIndicator(
+                            progress = { 0.75f },
+                            modifier = Modifier.fillMaxWidth().height(8.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+                        Text(
+                            text = "75% completed",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
+                        )
+                    }
+                }
+            )
+
             Spacer(modifier = Modifier.height(32.dp))
 
             PrimaryButton(
@@ -111,6 +141,17 @@ fun HomeScreen(navController: NavController) {
                 },
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            PrimaryButton(
+                text = "Morning Alertness Game",
+                onClick = {
+                    navController.navigate(Screen.MorningGame.route)
+                },
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
             )
         }
     }

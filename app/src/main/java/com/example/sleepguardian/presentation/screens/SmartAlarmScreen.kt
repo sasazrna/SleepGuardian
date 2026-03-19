@@ -70,6 +70,16 @@ fun SmartAlarmScreen(viewModel: SmartAlarmViewModel) {
                 steps = 5
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(text = "Daily Sleep Goal: ${settings.sleepGoalHours} hours", style = MaterialTheme.typography.titleSmall)
+            Slider(
+                value = settings.sleepGoalHours.toFloat(),
+                onValueChange = { viewModel.updateSleepGoal(it.toInt()) },
+                valueRange = 4f..12f,
+                steps = 8
+            )
+
             Spacer(modifier = Modifier.weight(1f))
 
             PrimaryButton(

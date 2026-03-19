@@ -45,6 +45,21 @@ fun HistoryScreen(viewModel: HistoryViewModel, navController: NavController) {
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
+                    item {
+                        WeeklySummaryCard(
+                            avgScore = uiState.weeklyAverageScore,
+                            avgDuration = uiState.weeklyAverageDuration
+                        )
+                    }
+
+                    item {
+                        Text(
+                            text = "Recent Sessions",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
                     items(uiState.sessions) { session ->
                         SessionItem(session = session) {
                             navController.navigate(Screen.SessionDetail.createRoute(session.id))
@@ -54,6 +69,28 @@ fun HistoryScreen(viewModel: HistoryViewModel, navController: NavController) {
             }
         }
     }
+}
+
+@Composable
+fun WeeklySummaryCard(avgScore: String, avgDuration: String) {
+    InfoCard(
+        title = "Weekly Summary",
+        content = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = avgScore, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(text = "Avg Score", style = MaterialTheme.typography.labelSmall)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = avgDuration, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(text = "Avg Duration", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    )
 }
 
 @Composable

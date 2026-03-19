@@ -16,6 +16,7 @@ class DataStoreAlarmRepository(private val context: Context) : AlarmRepository {
         val ALARM_HOUR = intPreferencesKey("alarm_hour")
         val ALARM_MINUTE = intPreferencesKey("alarm_minute")
         val WAKE_WINDOW = intPreferencesKey("wake_window")
+        val SLEEP_GOAL = intPreferencesKey("sleep_goal")
     }
 
     override fun getAlarmSettings(): Flow<AlarmSettings> {
@@ -24,7 +25,8 @@ class DataStoreAlarmRepository(private val context: Context) : AlarmRepository {
                 isEnabled = preferences[PreferencesKeys.ALARM_ENABLED] ?: false,
                 hour = preferences[PreferencesKeys.ALARM_HOUR] ?: 7,
                 minute = preferences[PreferencesKeys.ALARM_MINUTE] ?: 0,
-                wakeWindowMinutes = preferences[PreferencesKeys.WAKE_WINDOW] ?: 30
+                wakeWindowMinutes = preferences[PreferencesKeys.WAKE_WINDOW] ?: 30,
+                sleepGoalHours = preferences[PreferencesKeys.SLEEP_GOAL] ?: 8
             )
         }
     }
@@ -35,6 +37,7 @@ class DataStoreAlarmRepository(private val context: Context) : AlarmRepository {
             preferences[PreferencesKeys.ALARM_HOUR] = settings.hour
             preferences[PreferencesKeys.ALARM_MINUTE] = settings.minute
             preferences[PreferencesKeys.WAKE_WINDOW] = settings.wakeWindowMinutes
+            preferences[PreferencesKeys.SLEEP_GOAL] = settings.sleepGoalHours
         }
     }
 }
