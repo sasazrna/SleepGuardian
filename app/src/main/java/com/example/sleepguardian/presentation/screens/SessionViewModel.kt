@@ -1,21 +1,29 @@
 package com.example.sleepguardian.presentation.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.viewModelScope
 import com.example.sleepguardian.data.local.SleepSessionEntity
 import com.example.sleepguardian.data.local.SoundEventEntity
+import com.example.sleepguardian.domain.repository.AlarmRepository
 import com.example.sleepguardian.domain.repository.SleepHistoryRepository
 import com.example.sleepguardian.domain.usecase.SleepScoreUseCase
 import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
+import com.example.sleepguardian.domain.usecase.SmartAlarmUseCase
 import com.example.sleepguardian.presentation.BaseViewModel
+import com.example.sleepguardian.service.AlarmService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class SessionViewModel(
+    private val applicationContext: Context,
     private val sleepSessionUseCase: SleepSessionUseCase,
     private val sleepHistoryRepository: SleepHistoryRepository,
-    private val sleepScoreUseCase: SleepScoreUseCase
+    private val sleepScoreUseCase: SleepScoreUseCase,
+    private val alarmRepository: AlarmRepository,
+    private val smartAlarmUseCase: SmartAlarmUseCase
 ) : BaseViewModel<SessionViewModel.SessionUiState>(SessionUiState()) {
 
     private var timerJob: Job? = null
@@ -45,8 +53,17 @@ class SessionViewModel(
     private fun startSoundTracking() {
         trackingJob = viewModelScope.launch {
             _uiState.update { it.copy(status = "Listening") }
+
+            val alarmSettings = alarmRepository.getAlarmSettings().first()
+
             sleepSessionUseCase.execute().collect { result ->
                 _uiState.update { it.copy(currentSound = result.level.label) }
+
+                // Smart Alarm Check
+                val isCalm = result.level.label == "Quiet"
+                if (smartAlarmUseCase.shouldWakeUp(System.currentTimeMillis(), alarmSettings, isCalm)) {
+                    triggerImmediateAlarm()
+                }
 
                 if (currentSessionId != -1L) {
                     sleepHistoryRepository.addSoundEvent(
@@ -60,6 +77,11 @@ class SessionViewModel(
                 }
             }
         }
+    }
+
+    private fun triggerImmediateAlarm() {
+        val intent = Intent(applicationContext, AlarmService::class.java)
+        applicationContext.startService(intent)
     }
 
     fun stopSession() {
@@ -83,7 +105,7 @@ class SessionViewModel(
                 )
             }
 
-            _uiState.update { it.copy(status = "Idle", currentSound = "Stopped") }
+            _uiState.update { it.copy(status = "Idle", currentSound = "Stopped", isSessionFinished = true) }
         }
     }
 
@@ -97,6 +119,7 @@ class SessionViewModel(
     data class SessionUiState(
         val elapsedTime: String = "00:00:00",
         val status: String = "Initializing",
-        val currentSound: String = "None"
+        val currentSound: String = "None",
+        val isSessionFinished: Boolean = false
     )
 }

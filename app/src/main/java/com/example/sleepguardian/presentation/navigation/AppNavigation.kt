@@ -14,11 +14,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.ui.platform.LocalContext
 import com.example.sleepguardian.data.audio.AudioTracker
+import com.example.sleepguardian.data.local.DataStoreAlarmRepository
 import com.example.sleepguardian.data.local.SleepDatabase
 import com.example.sleepguardian.data.repository.SessionRepositoryImpl
 import com.example.sleepguardian.data.repository.SleepHistoryRepositoryImpl
 import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
 import com.example.sleepguardian.domain.usecase.SleepScoreUseCase
+import com.example.sleepguardian.domain.usecase.SmartAlarmUseCase
+import com.example.sleepguardian.service.AlarmScheduler
 
 @Composable
 fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
@@ -31,13 +34,19 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
         val audioTracker = AudioTracker()
         val sessionRepository = SessionRepositoryImpl(audioTracker)
         val historyRepository = SleepHistoryRepositoryImpl(database.sleepDao())
+        val alarmRepository = DataStoreAlarmRepository(context)
         val sessionUseCase = SleepSessionUseCase(sessionRepository)
         val scoreUseCase = SleepScoreUseCase()
+        val smartAlarmUseCase = SmartAlarmUseCase()
+        val alarmScheduler = AlarmScheduler(context)
 
         object {
             val historyRepo = historyRepository
+            val alarmRepo = alarmRepository
             val sessionUseCase = sessionUseCase
             val scoreUseCase = scoreUseCase
+            val smartAlarmUseCase = smartAlarmUseCase
+            val alarmScheduler = alarmScheduler
         }
     }
 
@@ -64,7 +73,14 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         @Suppress("UNCHECKED_CAST")
-                        return SessionViewModel(dependencies.sessionUseCase, dependencies.historyRepo, dependencies.scoreUseCase) as T
+                        return SessionViewModel(
+                            context,
+                            dependencies.sessionUseCase,
+                            dependencies.historyRepo,
+                            dependencies.scoreUseCase,
+                            dependencies.alarmRepo,
+                            dependencies.smartAlarmUseCase
+                        ) as T
                     }
                 }
             )
@@ -95,6 +111,17 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
                 }
             )
             SessionDetailScreen(detailViewModel)
+        }
+        composable(Screen.SmartAlarm.route) {
+            val smartAlarmViewModel: SmartAlarmViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        @Suppress("UNCHECKED_CAST")
+                        return SmartAlarmViewModel(dependencies.alarmRepo, dependencies.alarmScheduler) as T
+                    }
+                }
+            )
+            SmartAlarmScreen(smartAlarmViewModel)
         }
         composable(Screen.Settings.route) {
             SettingsScreen()

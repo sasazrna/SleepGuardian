@@ -95,7 +95,9 @@ fun HomeScreen(navController: NavController) {
                 )
                 PrimaryButton(
                     text = "Smart Alarm",
-                    onClick = { /* TODO */ },
+                    onClick = {
+                        navController.navigate(Screen.SmartAlarm.route)
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
