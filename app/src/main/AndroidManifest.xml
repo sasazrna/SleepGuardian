@@ -32,6 +32,7 @@
 
         <receiver android:name=".service.AlarmReceiver" android:exported="false" />
         <service android:name=".service.AlarmService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
+        <service android:name=".service.SoundPlayerService" android:exported="false" />
     </application>
 
 </manifest>

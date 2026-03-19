@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.ui.platform.LocalContext
 import com.example.sleepguardian.data.audio.AudioTracker
+import com.example.sleepguardian.data.audio.StaticSoundRepository
 import com.example.sleepguardian.data.local.DataStoreAlarmRepository
 import com.example.sleepguardian.data.local.SleepDatabase
 import com.example.sleepguardian.data.repository.SessionRepositoryImpl
@@ -39,6 +40,7 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
         val scoreUseCase = SleepScoreUseCase()
         val smartAlarmUseCase = SmartAlarmUseCase()
         val alarmScheduler = AlarmScheduler(context)
+        val soundRepository = StaticSoundRepository()
 
         object {
             val historyRepo = historyRepository
@@ -47,6 +49,7 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
             val scoreUseCase = scoreUseCase
             val smartAlarmUseCase = smartAlarmUseCase
             val alarmScheduler = alarmScheduler
+            val soundRepo = soundRepository
         }
     }
 
@@ -74,7 +77,7 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         @Suppress("UNCHECKED_CAST")
                         return SessionViewModel(
-                            context,
+                            context.applicationContext,
                             dependencies.sessionUseCase,
                             dependencies.historyRepo,
                             dependencies.scoreUseCase,
@@ -122,6 +125,17 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
                 }
             )
             SmartAlarmScreen(smartAlarmViewModel)
+        }
+        composable(Screen.Sounds.route) {
+            val soundsViewModel: SoundsViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        @Suppress("UNCHECKED_CAST")
+                        return SoundsViewModel(dependencies.soundRepo) as T
+                    }
+                }
+            )
+            SoundsScreen(soundsViewModel)
         }
         composable(Screen.Settings.route) {
             SettingsScreen()
