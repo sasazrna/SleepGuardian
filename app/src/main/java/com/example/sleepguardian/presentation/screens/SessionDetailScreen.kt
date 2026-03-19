@@ -1,5 +1,6 @@
 package com.example.sleepguardian.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,11 +10,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sleepguardian.presentation.components.InfoCard
-import com.example.sleepguardian.presentation.components.StatusIndicator
+import com.example.sleepguardian.presentation.components.*
 
 @Composable
 fun SessionDetailScreen(viewModel: SessionDetailViewModel) {
@@ -23,63 +24,137 @@ fun SessionDetailScreen(viewModel: SessionDetailViewModel) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Session Details",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-
-            if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                InfoCard(
-                    title = "Summary",
-                    content = {
-                        StatusIndicator(label = "Total Noises", value = uiState.noiseCount.toString())
-                        StatusIndicator(label = "Loud Noises", value = uiState.loudNoiseCount.toString(), indicatorColor = MaterialTheme.colorScheme.error)
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                if (uiState.stages.isNotEmpty()) {
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                contentPadding = PaddingValues(vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Header
+                item {
                     Text(
-                        text = "Sleep Stages",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(vertical = 12.dp)
+                        text = "Sleep Report",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
-                    LazyColumn(
-                        modifier = Modifier.heightIn(max = 200.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(uiState.stages) { stage ->
-                            StageItem(stage = stage)
+                }
+
+                // Score Card
+                item {
+                    InfoCard(
+                        title = "Sleep Score",
+                        content = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = uiState.sleepScore.toString(),
+                                    style = MaterialTheme.typography.displayLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 72.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = when {
+                                            uiState.sleepScore >= 80 -> "Excellent"
+                                            uiState.sleepScore >= 60 -> "Good"
+                                            else -> "Fair"
+                                        },
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+
+                // Insights
+                if (uiState.insights.isNotEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                                )
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Insights",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            uiState.insights.forEach { insight ->
+                                Text(
+                                    text = "• $insight",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Event Timeline",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    items(uiState.events) { event ->
-                        EventItem(event = event)
+                // Waveform Summary
+                item {
+                    Column {
+                        Text(text = "Waveform Summary", style = MaterialTheme.typography.titleSmall)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        WaveformSummary(events = uiState.events)
                     }
+                }
+
+                // Sleep Stages Chart
+                if (uiState.stages.isNotEmpty()) {
+                    item {
+                        Column {
+                            Text(text = "Sleep Stages", style = MaterialTheme.typography.titleSmall)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            SleepStageChart(stages = uiState.stages)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                LegendItem("Deep", MaterialTheme.colorScheme.tertiary)
+                                LegendItem("Light", MaterialTheme.colorScheme.primary)
+                                LegendItem("Awake", MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                }
+
+                // Noise Distribution
+                item {
+                    NoiseDistributionChart(
+                        noiseCount = uiState.noiseCount,
+                        loudNoiseCount = uiState.loudNoiseCount
+                    )
+                }
+
+                // Event Timeline
+                item {
+                    Text(
+                        text = "Event Timeline",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                items(uiState.events) { event ->
+                    EventItem(event = event)
                 }
             }
         }
@@ -87,15 +162,11 @@ fun SessionDetailScreen(viewModel: SessionDetailViewModel) {
 }
 
 @Composable
-fun StageItem(stage: SessionDetailViewModel.SleepStageDisplayModel) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = stage.stage, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-        Text(text = stage.time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+fun LegendItem(label: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(8.dp).background(color, androidx.compose.foundation.shape.CircleShape))
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
