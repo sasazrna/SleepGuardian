@@ -1,4 +1,4 @@
-package com.example.soundpattern.presentation.theme
+package com.example.sleepguardian.presentation.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
