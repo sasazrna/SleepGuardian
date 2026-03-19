@@ -1,12 +1,14 @@
 package com.example.sleepguardian.domain.usecase
 
+import com.example.sleepguardian.domain.model.SleepStage
 import com.example.sleepguardian.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class SleepSessionUseCase(
     private val repository: SessionRepository,
-    private val classifySoundUseCase: ClassifySoundUseCase
+    private val classifySoundUseCase: ClassifySoundUseCase,
+    private val detectSleepStageUseCase: DetectSleepStageUseCase
 ) {
 
     fun execute(): Flow<SoundResult> {
@@ -14,7 +16,9 @@ class SleepSessionUseCase(
             val aiResult = classifySoundUseCase.execute(sample.data, sample.maxAmplitude)
 
             val soundLevel = classifySound(sample.maxAmplitude)
-            SoundResult(soundLevel, sample.maxAmplitude, aiResult.label, aiResult.confidence)
+            val currentStage = detectSleepStageUseCase.execute(aiResult.label)
+
+            SoundResult(soundLevel, sample.maxAmplitude, aiResult.label, aiResult.confidence, currentStage)
         }
     }
 
@@ -35,7 +39,8 @@ data class SoundResult(
     val level: SoundLevel,
     val amplitude: Int,
     val aiLabel: String? = null,
-    val aiConfidence: Float? = null
+    val aiConfidence: Float? = null,
+    val sleepStage: SleepStage? = null
 )
 
 sealed class SoundLevel(val label: String) {

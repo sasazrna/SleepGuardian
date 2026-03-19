@@ -20,10 +20,7 @@ import com.example.sleepguardian.data.local.DataStoreAlarmRepository
 import com.example.sleepguardian.data.local.SleepDatabase
 import com.example.sleepguardian.data.repository.SessionRepositoryImpl
 import com.example.sleepguardian.data.repository.SleepHistoryRepositoryImpl
-import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
-import com.example.sleepguardian.domain.usecase.SleepScoreUseCase
-import com.example.sleepguardian.domain.usecase.SmartAlarmUseCase
-import com.example.sleepguardian.domain.usecase.ClassifySoundUseCase
+import com.example.sleepguardian.domain.usecase.*
 import com.example.sleepguardian.service.AlarmScheduler
 
 @Composable
@@ -42,7 +39,8 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
         val aiClassifier = TFLiteAudioClassifier()
         val classifyUseCase = ClassifySoundUseCase(aiClassifier)
 
-        val sessionUseCase = SleepSessionUseCase(sessionRepository, classifyUseCase)
+        val detectStageUseCase = DetectSleepStageUseCase()
+        val sessionUseCase = SleepSessionUseCase(sessionRepository, classifyUseCase, detectStageUseCase)
         val scoreUseCase = SleepScoreUseCase()
         val smartAlarmUseCase = SmartAlarmUseCase()
         val alarmScheduler = AlarmScheduler(context)

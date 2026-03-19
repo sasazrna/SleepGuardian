@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.viewModelScope
 import com.example.sleepguardian.data.local.SleepSessionEntity
+import com.example.sleepguardian.data.local.SleepStageEntity
 import com.example.sleepguardian.data.local.SoundEventEntity
 import com.example.sleepguardian.domain.repository.AlarmRepository
 import com.example.sleepguardian.domain.repository.SleepHistoryRepository
@@ -31,6 +32,7 @@ class SessionViewModel(
     private var currentSessionId: Long = -1
     private var sessionStartTime: Long = 0
     private var isAlarmTriggered: Boolean = false
+    private var lastRecordedStage: String? = null
 
     init {
         startTimer()
@@ -73,6 +75,22 @@ class SessionViewModel(
                     currentState.copy(
                         currentSound = labelToDisplay,
                         amplitudes = newAmplitudes
+                    )
+                }
+
+                // Update UI with Stage
+                _uiState.update { it.copy(currentStage = result.sleepStage?.label ?: "Unknown") }
+
+                // Record stage change if different
+                val currentStageLabel = result.sleepStage?.label
+                if (currentSessionId != -1L && currentStageLabel != null && currentStageLabel != lastRecordedStage) {
+                    lastRecordedStage = currentStageLabel
+                    sleepHistoryRepository.addSleepStage(
+                        SleepStageEntity(
+                            sessionId = currentSessionId,
+                            timestamp = System.currentTimeMillis(),
+                            stage = currentStageLabel
+                        )
                     )
                 }
 
@@ -140,6 +158,7 @@ class SessionViewModel(
         val elapsedTime: String = "00:00:00",
         val status: String = "Initializing",
         val currentSound: String = "None",
+        val currentStage: String = "Initializing",
         val isSessionFinished: Boolean = false,
         val amplitudes: List<Float> = emptyList()
     )

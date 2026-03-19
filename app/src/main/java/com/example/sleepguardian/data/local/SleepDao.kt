@@ -20,4 +20,10 @@ interface SleepDao {
 
     @Query("SELECT * FROM sound_events WHERE sessionId = :sessionId")
     suspend fun getSoundEventsForSession(sessionId: Long): List<SoundEventEntity>
+
+    @Insert
+    suspend fun insertSleepStage(stage: SleepStageEntity)
+
+    @Query("SELECT * FROM sleep_stages WHERE sessionId = :sessionId ORDER BY timestamp ASC")
+    suspend fun getSleepStagesForSession(sessionId: Long): List<SleepStageEntity>
 }
