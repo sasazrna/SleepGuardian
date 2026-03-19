@@ -4,5 +4,6 @@ data class AlarmSettings(
     val isEnabled: Boolean = false,
     val hour: Int = 7,
     val minute: Int = 0,
-    val wakeWindowMinutes: Int = 30
+    val wakeWindowMinutes: Int = 30,
+    val sleepGoalHours: Int = 8
 )
