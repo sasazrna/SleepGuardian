@@ -58,23 +58,29 @@ class SessionViewModel(
             val alarmSettings = alarmRepository.getAlarmSettings().first()
 
             sleepSessionUseCase.execute().collect { result ->
-                _uiState.update { it.copy(currentSound = result.level.label) }
+                // Update UI with AI label if available, otherwise fall back to simple level
+                val labelToDisplay = if (result.aiLabel != null && result.aiLabel != "Silence" && result.aiLabel != "Noise") {
+                    "${result.aiLabel} (${((result.aiConfidence ?: 0f) * 100).toInt()}%)"
+                } else {
+                    result.level.label
+                }
+                _uiState.update { it.copy(currentSound = labelToDisplay) }
 
                 // Smart Alarm Check - only trigger once
-                val isCalm = result.level.label == "Quiet"
+                val isCalm = result.level.label == "Quiet" || result.aiLabel == "Silence"
                 if (!isAlarmTriggered && smartAlarmUseCase.shouldWakeUp(System.currentTimeMillis(), alarmSettings, isCalm)) {
                     isAlarmTriggered = true
                     triggerImmediateAlarm()
                 }
 
                 // Optimization: Only save sound events that are NOT "Quiet" to save battery/IO
-                // or you could buffer and batch insert. For MVP, filtering is simplest.
-                if (currentSessionId != -1L && result.level.label != "Quiet") {
+                if (currentSessionId != -1L && result.level.label != "Quiet" && result.aiLabel != "Silence") {
+                    val finalLabel = result.aiLabel ?: result.level.label
                     sleepHistoryRepository.addSoundEvent(
                         SoundEventEntity(
                             sessionId = currentSessionId,
                             timestamp = System.currentTimeMillis(),
-                            label = result.level.label,
+                            label = finalLabel,
                             amplitude = result.amplitude
                         )
                     )
