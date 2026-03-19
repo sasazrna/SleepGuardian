@@ -6,4 +6,7 @@ sealed class Screen(val route: String) {
     object Session : Screen("session")
     object History : Screen("history")
     object Settings : Screen("settings")
+    object SessionDetail : Screen("session_detail/{sessionId}") {
+        fun createRoute(sessionId: Long) = "session_detail/$sessionId"
+    }
 }

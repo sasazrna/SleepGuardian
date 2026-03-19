@@ -88,7 +88,9 @@ fun HomeScreen(navController: NavController) {
             ) {
                 PrimaryButton(
                     text = "History",
-                    onClick = { /* TODO */ },
+                    onClick = {
+                        navController.navigate(Screen.History.route)
+                    },
                     modifier = Modifier.weight(1f)
                 )
                 PrimaryButton(
