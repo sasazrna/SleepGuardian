@@ -41,7 +41,7 @@ class AudioTracker {
                     }
                     emit(AudioSample(buffer.copyOf(), maxAmplitude))
                 }
-                delay(100) // Emit every 100ms
+                // Removed delay(100) for more continuous audio stream processing
             }
         } finally {
             audioRecord.stop()
