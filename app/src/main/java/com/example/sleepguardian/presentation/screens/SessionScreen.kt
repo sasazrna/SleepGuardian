@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.sleepguardian.presentation.components.PrimaryButton
+import com.example.sleepguardian.presentation.components.WaveformVisualizer
 
 @Composable
 fun SessionScreen(viewModel: SessionViewModel, navController: NavController) {
@@ -64,7 +65,16 @@ fun SessionScreen(viewModel: SessionViewModel, navController: NavController) {
                 color = MaterialTheme.colorScheme.secondary
             )
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(48.dp))
+
+            WaveformVisualizer(
+                amplitudes = uiState.amplitudes,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
 
             PrimaryButton(
                 text = "Stop Session",
