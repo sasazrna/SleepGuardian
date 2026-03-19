@@ -6,9 +6,10 @@ import kotlinx.coroutines.flow.map
 
 class SleepSessionUseCase(private val repository: SessionRepository) {
 
-    fun execute(): Flow<SoundLevel> {
+    fun execute(): Flow<SoundResult> {
         return repository.startSession().map { amplitude ->
-            classifySound(amplitude)
+            val soundLevel = classifySound(amplitude)
+            SoundResult(soundLevel, amplitude)
         }
     }
 
@@ -24,6 +25,8 @@ class SleepSessionUseCase(private val repository: SessionRepository) {
         repository.stopSession()
     }
 }
+
+data class SoundResult(val level: SoundLevel, val amplitude: Int)
 
 sealed class SoundLevel(val label: String) {
     object Quiet : SoundLevel("Quiet")
