@@ -65,6 +65,12 @@ fun SessionScreen(viewModel: SessionViewModel, navController: NavController) {
                 color = MaterialTheme.colorScheme.secondary
             )
 
+            Text(
+                text = "Stage: ${uiState.currentStage}",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+
             Spacer(modifier = Modifier.height(48.dp))
 
             WaveformVisualizer(
