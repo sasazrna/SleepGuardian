@@ -19,7 +19,7 @@ class AudioTracker {
     private val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
     @SuppressLint("MissingPermission")
-    fun startTracking(): Flow<Int> = flow {
+    fun startTracking(): Flow<AudioSample> = flow {
         val audioRecord = AudioRecord(
             MediaRecorder.AudioSource.MIC,
             sampleRate,
@@ -39,7 +39,7 @@ class AudioTracker {
                     for (i in 0 until readCount) {
                         maxAmplitude = maxOf(maxAmplitude, abs(buffer[i].toInt()))
                     }
-                    emit(maxAmplitude)
+                    emit(AudioSample(buffer.copyOf(), maxAmplitude))
                 }
                 delay(100) // Emit every 100ms
             }

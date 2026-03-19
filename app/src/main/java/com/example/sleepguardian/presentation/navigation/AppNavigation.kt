@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.compose.ui.platform.LocalContext
 import com.example.sleepguardian.data.audio.AudioTracker
 import com.example.sleepguardian.data.audio.StaticSoundRepository
+import com.example.sleepguardian.data.audio.TFLiteAudioClassifier
 import com.example.sleepguardian.data.local.DataStoreAlarmRepository
 import com.example.sleepguardian.data.local.SleepDatabase
 import com.example.sleepguardian.data.repository.SessionRepositoryImpl
@@ -22,6 +23,7 @@ import com.example.sleepguardian.data.repository.SleepHistoryRepositoryImpl
 import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
 import com.example.sleepguardian.domain.usecase.SleepScoreUseCase
 import com.example.sleepguardian.domain.usecase.SmartAlarmUseCase
+import com.example.sleepguardian.domain.usecase.ClassifySoundUseCase
 import com.example.sleepguardian.service.AlarmScheduler
 
 @Composable
@@ -36,7 +38,11 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
         val sessionRepository = SessionRepositoryImpl(audioTracker)
         val historyRepository = SleepHistoryRepositoryImpl(database.sleepDao())
         val alarmRepository = DataStoreAlarmRepository(context)
-        val sessionUseCase = SleepSessionUseCase(sessionRepository)
+
+        val aiClassifier = TFLiteAudioClassifier()
+        val classifyUseCase = ClassifySoundUseCase(aiClassifier)
+
+        val sessionUseCase = SleepSessionUseCase(sessionRepository, classifyUseCase)
         val scoreUseCase = SleepScoreUseCase()
         val smartAlarmUseCase = SmartAlarmUseCase()
         val alarmScheduler = AlarmScheduler(context)
