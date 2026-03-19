@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.sleepguardian.data.local.SleepSessionEntity
 import com.example.sleepguardian.data.local.SoundEventEntity
 import com.example.sleepguardian.domain.repository.SleepHistoryRepository
+import com.example.sleepguardian.domain.usecase.SleepScoreUseCase
 import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
 import com.example.sleepguardian.presentation.BaseViewModel
 import kotlinx.coroutines.Job
@@ -13,7 +14,8 @@ import kotlinx.coroutines.launch
 
 class SessionViewModel(
     private val sleepSessionUseCase: SleepSessionUseCase,
-    private val sleepHistoryRepository: SleepHistoryRepository
+    private val sleepHistoryRepository: SleepHistoryRepository,
+    private val sleepScoreUseCase: SleepScoreUseCase
 ) : BaseViewModel<SessionViewModel.SessionUiState>(SessionUiState()) {
 
     private var timerJob: Job? = null
@@ -68,8 +70,9 @@ class SessionViewModel(
 
             if (currentSessionId != -1L) {
                 val endTime = System.currentTimeMillis()
-                // Placeholder score logic
-                val score = 85
+                val events = sleepHistoryRepository.getSoundEventsForSession(currentSessionId)
+                val score = sleepScoreUseCase.calculateScore(endTime - sessionStartTime, events)
+
                 sleepHistoryRepository.updateSession(
                     SleepSessionEntity(
                         id = currentSessionId,
