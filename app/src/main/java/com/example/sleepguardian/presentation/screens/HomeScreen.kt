@@ -9,12 +9,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.sleepguardian.presentation.components.InfoCard
 import com.example.sleepguardian.presentation.components.PrimaryButton
 import com.example.sleepguardian.presentation.components.StatusIndicator
+import com.example.sleepguardian.presentation.navigation.Screen
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -71,7 +73,9 @@ fun HomeScreen() {
 
             PrimaryButton(
                 text = "Start Sleep Session",
-                onClick = { /* TODO */ },
+                onClick = {
+                    navController.navigate(Screen.Session.route)
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )

@@ -6,14 +6,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.sleepguardian.domain.repository.OnboardingRepository
-import com.example.sleepguardian.presentation.screens.HistoryScreen
-import com.example.sleepguardian.presentation.screens.HomeScreen
-import com.example.sleepguardian.presentation.screens.OnboardingScreen
-import com.example.sleepguardian.presentation.screens.OnboardingViewModel
-import com.example.sleepguardian.presentation.screens.SessionScreen
-import com.example.sleepguardian.presentation.screens.SettingsScreen
+import com.example.sleepguardian.presentation.screens.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.sleepguardian.data.audio.AudioTracker
+import com.example.sleepguardian.data.repository.SessionRepositoryImpl
+import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
 
 @Composable
 fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
@@ -35,10 +33,21 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
             OnboardingScreen(onboardingViewModel, navController)
         }
         composable(Screen.Home.route) {
-            HomeScreen()
+            HomeScreen(navController)
         }
         composable(Screen.Session.route) {
-            SessionScreen()
+            val audioTracker = AudioTracker()
+            val sessionRepository = SessionRepositoryImpl(audioTracker)
+            val useCase = SleepSessionUseCase(sessionRepository)
+            val sessionViewModel: SessionViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        @Suppress("UNCHECKED_CAST")
+                        return SessionViewModel(useCase) as T
+                    }
+                }
+            )
+            SessionScreen(sessionViewModel, navController)
         }
         composable(Screen.History.route) {
             HistoryScreen()
