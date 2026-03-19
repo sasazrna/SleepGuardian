@@ -1,4 +1,4 @@
-package com.example.soundpattern.presentation.navigation
+package com.example.sleepguardian.presentation.navigation
 
 sealed class Screen(val route: String) {
     object Onboarding : Screen("onboarding")
