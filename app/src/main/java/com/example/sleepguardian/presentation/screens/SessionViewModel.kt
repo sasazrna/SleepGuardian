@@ -1,18 +1,15 @@
 package com.example.sleepguardian.presentation.screens
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
-import com.example.sleepguardian.domain.usecase.SoundLevel
+import com.example.sleepguardian.presentation.BaseViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class SessionViewModel(private val sleepSessionUseCase: SleepSessionUseCase) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(SessionUiState())
-    val uiState: StateFlow<SessionUiState> = _uiState.asStateFlow()
+class SessionViewModel(private val sleepSessionUseCase: SleepSessionUseCase) :
+    BaseViewModel<SessionViewModel.SessionUiState>(SessionUiState()) {
 
     private var timerJob: Job? = null
     private var trackingJob: Job? = null
