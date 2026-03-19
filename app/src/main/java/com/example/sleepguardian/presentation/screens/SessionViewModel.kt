@@ -64,7 +64,17 @@ class SessionViewModel(
                 } else {
                     result.level.label
                 }
-                _uiState.update { it.copy(currentSound = labelToDisplay) }
+
+                // Normalizing amplitude for visualization (0.0 to 1.0)
+                val normalizedAmplitude = (result.amplitude.toFloat() / 32768f).coerceIn(0f, 1.0f)
+
+                _uiState.update { currentState ->
+                    val newAmplitudes = (currentState.amplitudes + normalizedAmplitude).takeLast(50)
+                    currentState.copy(
+                        currentSound = labelToDisplay,
+                        amplitudes = newAmplitudes
+                    )
+                }
 
                 // Smart Alarm Check - only trigger once
                 val isCalm = result.level.label == "Quiet" || result.aiLabel == "Silence"
@@ -130,6 +140,7 @@ class SessionViewModel(
         val elapsedTime: String = "00:00:00",
         val status: String = "Initializing",
         val currentSound: String = "None",
-        val isSessionFinished: Boolean = false
+        val isSessionFinished: Boolean = false,
+        val amplitudes: List<Float> = emptyList()
     )
 }
