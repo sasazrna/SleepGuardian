@@ -1,4 +1,4 @@
-package com.example.sleepguardian
+package com.example.soundpattern
 
 import org.junit.Test
 
