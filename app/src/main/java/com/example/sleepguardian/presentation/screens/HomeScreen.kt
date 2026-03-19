@@ -106,7 +106,9 @@ fun HomeScreen(navController: NavController) {
 
             PrimaryButton(
                 text = "Sounds",
-                onClick = { /* TODO */ },
+                onClick = {
+                    navController.navigate(Screen.Sounds.route)
+                },
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )

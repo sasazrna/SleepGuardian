@@ -30,6 +30,7 @@ class SessionViewModel(
     private var trackingJob: Job? = null
     private var currentSessionId: Long = -1
     private var sessionStartTime: Long = 0
+    private var isAlarmTriggered: Boolean = false
 
     init {
         startTimer()
@@ -59,13 +60,16 @@ class SessionViewModel(
             sleepSessionUseCase.execute().collect { result ->
                 _uiState.update { it.copy(currentSound = result.level.label) }
 
-                // Smart Alarm Check
+                // Smart Alarm Check - only trigger once
                 val isCalm = result.level.label == "Quiet"
-                if (smartAlarmUseCase.shouldWakeUp(System.currentTimeMillis(), alarmSettings, isCalm)) {
+                if (!isAlarmTriggered && smartAlarmUseCase.shouldWakeUp(System.currentTimeMillis(), alarmSettings, isCalm)) {
+                    isAlarmTriggered = true
                     triggerImmediateAlarm()
                 }
 
-                if (currentSessionId != -1L) {
+                // Optimization: Only save sound events that are NOT "Quiet" to save battery/IO
+                // or you could buffer and batch insert. For MVP, filtering is simplest.
+                if (currentSessionId != -1L && result.level.label != "Quiet") {
                     sleepHistoryRepository.addSoundEvent(
                         SoundEventEntity(
                             sessionId = currentSessionId,
