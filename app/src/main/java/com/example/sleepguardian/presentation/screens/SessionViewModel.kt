@@ -1,20 +1,18 @@
 package com.example.sleepguardian.presentation.screens
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
 import androidx.lifecycle.viewModelScope
-import com.example.sleepguardian.data.local.SleepSessionEntity
-import com.example.sleepguardian.data.local.SleepStageEntity
-import com.example.sleepguardian.data.local.SoundEventEntity
 import com.example.sleepguardian.domain.repository.AlarmRepository
 import com.example.sleepguardian.domain.repository.SleepHistoryRepository
 import com.example.sleepguardian.domain.usecase.SleepScoreUseCase
 import com.example.sleepguardian.domain.usecase.SleepSessionUseCase
 import com.example.sleepguardian.domain.usecase.SmartAlarmUseCase
 import com.example.sleepguardian.presentation.BaseViewModel
-import com.example.sleepguardian.service.AlarmService
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.example.sleepguardian.service.SleepTrackingService
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -27,136 +25,73 @@ class SessionViewModel(
     private val smartAlarmUseCase: SmartAlarmUseCase
 ) : BaseViewModel<SessionViewModel.SessionUiState>(SessionUiState()) {
 
-    private var timerJob: Job? = null
-    private var trackingJob: Job? = null
-    private var currentSessionId: Long = -1
-    private var sessionStartTime: Long = 0
-    private var isAlarmTriggered: Boolean = false
-    private var lastRecordedStage: String? = null
+    private var sleepTrackingService: SleepTrackingService? = null
+    private var isBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as SleepTrackingService.SleepTrackingBinder
+            sleepTrackingService = binder.getService()
+            isBound = true
+
+            // Start tracking in the service
+            sleepTrackingService?.startTracking(
+                sleepSessionUseCase,
+                sleepHistoryRepository,
+                sleepScoreUseCase,
+                alarmRepository,
+                smartAlarmUseCase
+            )
+
+            // Observe service state
+            viewModelScope.launch {
+                sleepTrackingService?.trackingState?.collect { state ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            elapsedTime = state.elapsedTime,
+                            currentSound = state.currentSound,
+                            currentStage = state.currentStage,
+                            amplitudes = state.amplitudes,
+                            isSessionFinished = state.isFinished
+                        )
+                    }
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            isBound = false
+            sleepTrackingService = null
+        }
+    }
 
     init {
-        startTimer()
-        startSoundTracking()
+        bindTrackingService()
     }
 
-    private fun startTimer() {
-        timerJob = viewModelScope.launch {
-            sessionStartTime = System.currentTimeMillis()
-            currentSessionId = sleepHistoryRepository.startNewSession(sessionStartTime)
-
-            var seconds = 0L
-            while (true) {
-                delay(1000)
-                seconds++
-                _uiState.update { it.copy(elapsedTime = formatDuration(seconds)) }
-            }
-        }
-    }
-
-    private fun startSoundTracking() {
-        trackingJob = viewModelScope.launch {
-            _uiState.update { it.copy(status = "Listening") }
-
-            val alarmSettings = alarmRepository.getAlarmSettings().first()
-
-            sleepSessionUseCase.execute().collect { result ->
-                // Update UI with AI label if available, otherwise fall back to simple level
-                val labelToDisplay = if (result.aiLabel != null && result.aiLabel != "Silence" && result.aiLabel != "Noise") {
-                    "${result.aiLabel} (${((result.aiConfidence ?: 0f) * 100).toInt()}%)"
-                } else {
-                    result.level.label
-                }
-
-                // Normalizing amplitude for visualization (0.0 to 1.0)
-                val normalizedAmplitude = (result.amplitude.toFloat() / 32768f).coerceIn(0f, 1.0f)
-
-                _uiState.update { currentState ->
-                    val newAmplitudes = (currentState.amplitudes + normalizedAmplitude).takeLast(50)
-                    currentState.copy(
-                        currentSound = labelToDisplay,
-                        amplitudes = newAmplitudes
-                    )
-                }
-
-                // Update UI with Stage
-                _uiState.update { it.copy(currentStage = result.sleepStage?.label ?: "Unknown") }
-
-                // Record stage change if different
-                val currentStageLabel = result.sleepStage?.label
-                if (currentSessionId != -1L && currentStageLabel != null && currentStageLabel != lastRecordedStage) {
-                    lastRecordedStage = currentStageLabel
-                    sleepHistoryRepository.addSleepStage(
-                        SleepStageEntity(
-                            sessionId = currentSessionId,
-                            timestamp = System.currentTimeMillis(),
-                            stage = currentStageLabel
-                        )
-                    )
-                }
-
-                // Smart Alarm Check - only trigger once
-                val isCalm = result.level.label == "Quiet" || result.aiLabel == "Silence"
-                if (!isAlarmTriggered && smartAlarmUseCase.shouldWakeUp(System.currentTimeMillis(), alarmSettings, isCalm)) {
-                    isAlarmTriggered = true
-                    triggerImmediateAlarm()
-                }
-
-                // Optimization: Only save sound events that are NOT "Quiet" to save battery/IO
-                if (currentSessionId != -1L && result.level.label != "Quiet" && result.aiLabel != "Silence") {
-                    val finalLabel = result.aiLabel ?: result.level.label
-                    sleepHistoryRepository.addSoundEvent(
-                        SoundEventEntity(
-                            sessionId = currentSessionId,
-                            timestamp = System.currentTimeMillis(),
-                            label = finalLabel,
-                            amplitude = result.amplitude
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    private fun triggerImmediateAlarm() {
-        val intent = Intent(applicationContext, AlarmService::class.java)
+    private fun bindTrackingService() {
+        val intent = Intent(applicationContext, SleepTrackingService::class.java)
+        applicationContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         applicationContext.startService(intent)
     }
 
     fun stopSession() {
-        viewModelScope.launch {
-            timerJob?.cancel()
-            trackingJob?.cancel()
-            sleepSessionUseCase.stopSession()
-
-            if (currentSessionId != -1L) {
-                val endTime = System.currentTimeMillis()
-                val events = sleepHistoryRepository.getSoundEventsForSession(currentSessionId)
-                val score = sleepScoreUseCase.calculateScore(endTime - sessionStartTime, events)
-
-                sleepHistoryRepository.updateSession(
-                    SleepSessionEntity(
-                        id = currentSessionId,
-                        startTime = sessionStartTime,
-                        endTime = endTime,
-                        sleepScore = score
-                    )
-                )
-            }
-
-            _uiState.update { it.copy(status = "Idle", currentSound = "Stopped", isSessionFinished = true) }
+        if (isBound) {
+            sleepTrackingService?.stopTracking()
         }
     }
 
-    private fun formatDuration(seconds: Long): String {
-        val hours = seconds / 3600
-        val minutes = (seconds % 3600) / 60
-        val secs = seconds % 60
-        return String.format("%02d:%02d:%02d", hours, minutes, secs)
+    override fun onCleared() {
+        if (isBound) {
+            applicationContext.unbindService(serviceConnection)
+            isBound = false
+        }
+        super.onCleared()
     }
 
     data class SessionUiState(
         val elapsedTime: String = "00:00:00",
-        val status: String = "Initializing",
+        val status: String = "Listening", // Fixed for foreground service
         val currentSound: String = "None",
         val currentStage: String = "Initializing",
         val isSessionFinished: Boolean = false,
