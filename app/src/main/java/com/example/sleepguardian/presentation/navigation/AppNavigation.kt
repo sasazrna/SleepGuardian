@@ -36,7 +36,7 @@ fun AppNavigation(startDestination: String, repository: OnboardingRepository) {
         val historyRepository = SleepHistoryRepositoryImpl(database.sleepDao())
         val alarmRepository = DataStoreAlarmRepository(context)
 
-        val aiClassifier = TFLiteAudioClassifier()
+        val aiClassifier = TFLiteAudioClassifier(context)
         val classifyUseCase = ClassifySoundUseCase(aiClassifier)
 
         val detectStageUseCase = DetectSleepStageUseCase()
