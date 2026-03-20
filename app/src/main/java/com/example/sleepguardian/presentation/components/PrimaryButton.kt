@@ -14,7 +14,8 @@ fun PrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer
+    contentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    elevation: ButtonElevation? = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
 ) {
     Button(
         onClick = onClick,
@@ -25,7 +26,9 @@ fun PrimaryButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor
-        )
+        ),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+        elevation = elevation
     ) {
         Text(
             text = text,

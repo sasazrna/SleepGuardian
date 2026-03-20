@@ -56,13 +56,9 @@ fun SoundsScreen(viewModel: SoundsViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
-            Text(
-                text = "Relaxing Sounds",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
+            com.example.sleepguardian.presentation.components.ScreenHeader(title = "Relaxing Sounds")
 
             InfoCard(
                 title = "Sleep Timer",

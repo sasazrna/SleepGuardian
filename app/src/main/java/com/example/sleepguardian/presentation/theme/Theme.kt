@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val SleepDarkColorScheme = darkColorScheme(
@@ -11,13 +12,18 @@ private val SleepDarkColorScheme = darkColorScheme(
     onPrimary = DeepIndigo,
     primaryContainer = MutedSlate,
     onPrimaryContainer = StarLight,
-    secondary = PurpleGrey80,
+    secondary = Color(0xFF9EA0DA),
+    onSecondary = DeepIndigo,
+    tertiary = Color(0xFFC3C5FF),
+    onTertiary = DeepIndigo,
     background = DeepIndigo,
-    surface = DeepIndigo,
+    surface = Color(0xFF1E1F35), // Deeper surface for card depth
     onBackground = StarLight,
     onSurface = StarLight,
-    surfaceVariant = MutedSlate,
-    onSurfaceVariant = SoftLavender
+    surfaceVariant = Color(0xFF2C2D48), // Nuanced variant for cards
+    onSurfaceVariant = SoftLavender,
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005)
 )
 
 private val LightColorScheme = lightColorScheme(
